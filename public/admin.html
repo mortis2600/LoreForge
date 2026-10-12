@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LoreForge Admin</title>
+<style>
+  :root { --bg: #14100d; --card: #1c1714; --line: #3a2f2a; --txt: #e8e8e8; --accent: #c1121f; --gold: #e8a33d; --ok: #4caf50; --bad: #f44336; --dim: #9a8f88; }
+  body { font-family: system-ui, sans-serif; max-width: 1000px; margin: 2rem auto; padding: 0 1rem; color: var(--txt); background: var(--bg); }
+  h1 { color: var(--accent); margin-bottom: 0.2rem; }
+  a { color: var(--gold); }
+  .card { border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.25rem; margin: 1rem 0; background: var(--card); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--dim); font-weight: 600; }
+  input, select, textarea { background: #2a2320; color: var(--txt); border: 1px solid var(--line); border-radius: 4px; padding: 0.4rem 0.6rem; font-size: 0.9rem; }
+  textarea { width: 100%; font-family: monospace; }
+  button { background: var(--accent); color: #fff; border: 0; border-radius: 4px; padding: 0.45rem 0.9rem; cursor: pointer; font-size: 0.9rem; }
+  button.ghost { background: transparent; border: 1px solid var(--line); color: var(--txt); }
+  button.small { padding: 0.25rem 0.6rem; font-size: 0.8rem; }
+  button:disabled { opacity: 0.4; cursor: default; }
+  .tabs { display: flex; gap: 0.5rem; margin: 1.5rem 0 0; }
+  .tabs button { background: transparent; border: 1px solid var(--line); border-bottom: 0; border-radius: 6px 6px 0 0; color: var(--dim); }
+  .tabs button.active { background: var(--card); color: var(--txt); }
+  .tabpane { display: none; }
+  .tabpane.active { display: block; }
+  .badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 10px; font-size: 0.75rem; background: #2a2320; border: 1px solid var(--line); }
+  .badge.ok { color: var(--ok); border-color: var(--ok); }
+  .badge.bad { color: var(--bad); border-color: var(--bad); }
+  .badge.warn { color: var(--gold); border-color: var(--gold); }
+  pre.log { background: #0d0a08; border: 1px solid var(--line); border-radius: 6px; padding: 0.75rem; max-height: 400px; overflow: auto; font-size: 0.8rem; white-space: pre-wrap; }
+  .row { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: end; }
+  .row > div { display: flex; flex-direction: column; gap: 0.25rem; }
+  label { font-size: 0.8rem; color: var(--dim); }
+  .err { color: var(--bad); font-size: 0.85rem; margin-top: 0.5rem; }
+  .okmsg { color: var(--ok); font-size: 0.85rem; margin-top: 0.5rem; }
+  #keybar { display: flex; gap: 0.5rem; align-items: center; margin: 1rem 0; font-size: 0.9rem; }
+  .muted { color: var(--dim); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+  <h1>🔥 LoreForge Admin</h1>
+  <p class="muted">Manage LLM providers, site sources, ingest jobs, and data stats. <a href="/">API home</a></p>
+
+  <div id="keybar">
+    <label for="apikey">API key</label>
+    <input id="apikey" type="password" placeholder="(empty if server is open)" style="width: 280px">
+    <button class="ghost small" id="savekey">Save</button>
+    <span class="muted" id="keystatus"></span>
+  </div>
+
+  <div class="tabs">
+    <button data-tab="llm" class="active">LLM Providers</button>
+    <button data-tab="sources">Sources</button>
+    <button data-tab="jobs">Jobs</button>
+    <button data-tab="stats">Stats</button>
+  </div>
+
+  <div class="card tabpane active" id="tab-llm">
+    <h3>Providers <span class="muted">(first enabled = default, rest = failover)</span></h3>
+    <div id="llm-table"></div>
+    <h4>Add provider</h4>
+    <div class="row">
+      <div><label>Name</label><input id="np-name" placeholder="my-ollama"></div>
+      <div><label>Type</label><select id="np-type"><option value="ollama">ollama</option><option value="deepseek">deepseek</option></select></div>
+      <div><label>Model</label><input id="np-model" placeholder="llama3.2"></div>
+      <div><label>Host (ollama)</label><input id="np-host" placeholder="http://192.168.0.131:11434"></div>
+      <div><label>Key env var (deepseek)</label><input id="np-keyenv" placeholder="DEEPSEEK_API_KEY"></div>
+      <div><button id="np-add">Add</button></div>
+    </div>
+    <div class="err" id="llm-err"></div>
+    <div class="okmsg" id="llm-ok"></div>
+  </div>
+
+  <div class="card tabpane" id="tab-sources">
+    <h3>Site sources</h3>
+    <div id="sources-table"></div>
+    <h4>Add / edit source</h4>
+    <div class="row">
+      <div><label>Key</label><input id="ns-key" placeholder="my_wiki"></div>
+      <div><label>Adapter</label><select id="ns-adapter"></select></div>
+      <div><label>Display name</label><input id="ns-name" placeholder="My Wiki"></div>
+      <div><label>LLM override</label><select id="ns-llm"><option value="">(default)</option></select></div>
+    </div>
+    <div style="margin-top:0.75rem">
+      <label>Adapter config (JSON) — mediawiki: {"wiki_api_url": "...", "categories": {"characters": "Category:Characters"}} · html: {"urls": [...], "sitemap": "...", "categories": {"articles": "..."}}</label>
+      <textarea id="ns-config" rows="5" placeholder='{"wiki_api_url": "https://example.fandom.com/api.php", "categories": {"characters": "Category:Characters"}}'></textarea>
+    </div>
+    <div style="margin-top:0.75rem"><button id="ns-save">Save source</button> <button class="ghost" id="ns-clear">Clear</button></div>
+    <div class="err" id="sources-err"></div>
+    <div class="okmsg" id="sources-ok"></div>
+  </div>
+
+  <div class="card tabpane" id="tab-jobs">
+    <h3>Ingest jobs</h3>
+    <div><button class="ghost small" id="jobs-refresh">Refresh</button> <span class="muted">auto-refreshes while jobs run</span></div>
+    <div id="jobs-table" style="margin-top:0.75rem"></div>
+    <div id="job-log-wrap" style="display:none; margin-top:1rem">
+      <h4>Log <span class="muted" id="job-log-title"></span></h4>
+      <pre class="log" id="job-log"></pre>
+    </div>
+  </div>
+
+  <div class="card tabpane" id="tab-stats">
+    <h3>Database stats</h3>
+    <div><button class="ghost small" id="stats-refresh">Refresh</button></div>
+    <div id="stats-body" style="margin-top:0.75rem"></div>
+  </div>
+
+<script>
+const $ = id => document.getElementById(id);
+const headers = () => {
+  const k = localStorage.getItem('loreforge_admin_key') || '';
+  return k ? { 'x-api-key': k, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+};
+async function api(method, path, body) {
+  const r = await fetch('/api/v1/admin' + path, {
+    method, headers: headers(),
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || ('HTTP ' + r.status));
+  return data;
+}
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// ---- key bar ----
+$('apikey').value = localStorage.getItem('loreforge_admin_key') || '';
+$('savekey').onclick = () => {
+  localStorage.setItem('loreforge_admin_key', $('apikey').value.trim());
+  $('keystatus').textContent = 'saved locally';
+  setTimeout(() => $('keystatus').textContent = '', 2000);
+};
+
+// ---- tabs ----
+document.querySelectorAll('.tabs button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.tabs button').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.tabpane').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    $('tab-' + b.dataset.tab).classList.add('active');
+    if (b.dataset.tab === 'jobs') loadJobs();
+    if (b.dataset.tab === 'stats') loadStats();
+  };
+});
+
+// ---- LLM providers ----
+let providers = [];
+async function loadLLM() {
+  try {
+    const d = await api('GET', '/llm');
+    providers = d.providers;
+    renderLLM();
+    // refresh llm dropdown in sources tab
+    $('ns-llm').innerHTML = '<option value="">(default)</option>' +
+      providers.map(p => `<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('');
+    $('llm-err').textContent = '';
+  } catch (e) { $('llm-err').textContent = e.message; }
+}
+function renderLLM() {
+  $('llm-table').innerHTML = `<table><tr><th></th><th>Name</th><th>Type</th><th>Model</th><th>Host / Key</th><th>Enabled</th><th></th></tr>` +
+    providers.map((p, i) => `<tr>
+      <td>${i > 0 ? `<button class="ghost small" data-mv="${i},-1">↑</button>` : ''}${i < providers.length - 1 ? `<button class="ghost small" data-mv="${i},1">↓</button>` : ''}</td>
+      <td><strong>${esc(p.name)}</strong></td><td>${esc(p.provider)}</td><td>${esc(p.model || '')}</td>
+      <td>${p.provider === 'ollama' ? esc(p.host || '') : `<span class="badge ${p.api_key_set ? 'ok' : 'bad'}">${esc(p.api_key_env || '')} ${p.api_key_set ? 'set' : 'MISSING'}</span>`}</td>
+      <td><input type="checkbox" data-en="${i}" ${p.enabled !== false ? 'checked' : ''}></td>
+      <td><button class="ghost small" data-test="${esc(p.name)}">Test</button>
+          <button class="ghost small" data-del="${i}">Delete</button></td>
+    </tr>`).join('') + `</table><p class="muted">Test sends a tiny ping prompt through that provider.</p><div id="llm-test-out"></div>`;
+
+  document.querySelectorAll('[data-mv]').forEach(b => b.onclick = async () => {
+    const [i, d] = b.dataset.mv.split(',').map(Number);
+    const [p] = providers.splice(i, 1);
+    providers.splice(i + d, 0, p);
+    await saveProviders();
+  });
+  document.querySelectorAll('[data-en]').forEach(c => c.onchange = async () => {
+    providers[Number(c.dataset.en)].enabled = c.checked;
+    await saveProviders();
+  });
+  document.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+    if (!confirm('Delete provider "' + providers[Number(b.dataset.del)].name + '"?')) return;
+    providers.splice(Number(b.dataset.del), 1);
+    await saveProviders();
+  });
+  document.querySelectorAll('[data-test]').forEach(b => b.onclick = async () => {
+    const out = $('llm-test-out');
+    out.innerHTML = '<span class="muted">testing…</span>';
+    try {
+      const d = await api('POST', '/llm/' + encodeURIComponent(b.dataset.test) + '/test');
+      out.innerHTML = `<span class="badge ok">OK</span> <code>${esc(JSON.stringify(d.result))}</code>`;
+    } catch (e) { out.innerHTML = `<span class="badge bad">FAIL</span> ${esc(e.message)}`; }
+  });
+}
+async function saveProviders() {
+  try {
+    const d = await api('PUT', '/llm', { providers });
+    providers = d.providers;
+    renderLLM();
+    $('llm-ok').textContent = 'saved';
+    setTimeout(() => $('llm-ok').textContent = '', 2000);
+  } catch (e) { $('llm-err').textContent = e.message; }
+}
+$('np-add').onclick = async () => {
+  const type = $('np-type').value;
+  const p = { name: $('np-name').value.trim(), provider: type, enabled: true };
+  if (!p.name) { $('llm-err').textContent = 'name is required'; return; }
+  if ($('np-model').value.trim()) p.model = $('np-model').value.trim();
+  if (type === 'ollama' && $('np-host').value.trim()) p.host = $('np-host').value.trim();
+  if (type === 'deepseek' && $('np-keyenv').value.trim()) p.api_key_env = $('np-keyenv').value.trim();
+  providers.push(p);
+  ['np-name','np-model','np-host','np-keyenv'].forEach(id => $(id).value = '');
+  await saveProviders();
+};
+
+// ---- Sources ----
+let sources = {}, adapters = [];
+async function loadSources() {
+  try {
+    const d = await api('GET', '/sources');
+    sources = d.sources; adapters = d.adapters;
+    $('ns-adapter').innerHTML = adapters.map(a => `<option>${esc(a)}</option>`).join('');
+    renderSources();
+    $('sources-err').textContent = '';
+  } catch (e) { $('sources-err').textContent = e.message; }
+}
+function renderSources() {
+  $('sources-table').innerHTML = `<table><tr><th>Key</th><th>Adapter</th><th>Display name</th><th>Entity types</th><th>LLM</th><th></th></tr>` +
+    Object.entries(sources).map(([k, s]) => `<tr>
+      <td><strong>${esc(k)}</strong></td><td><span class="badge">${esc(s.adapter || 'mediawiki')}</span></td>
+      <td>${esc(s.display_name || '')}</td>
+      <td>${esc(Object.keys(s.categories || s.entity_types || {}).join(', '))}</td>
+      <td>${esc(s.llm || '(default)')}</td>
+      <td><button class="ghost small" data-edit="${esc(k)}">Edit</button>
+          <button class="ghost small" data-run="${esc(k)}">Run ingest</button>
+          <button class="ghost small" data-trivia="${esc(k)}">Trivia</button>
+          <button class="ghost small" data-sdel="${esc(k)}">Delete</button></td>
+    </tr>`).join('') + `</table>`;
+  document.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => {
+    const k = b.dataset.edit, s = sources[k];
+    $('ns-key').value = k;
+    $('ns-adapter').value = s.adapter || 'mediawiki';
+    $('ns-name').value = s.display_name || '';
+    $('ns-llm').value = s.llm || '';
+    const { adapter, display_name, llm, ...rest } = s;
+    $('ns-config').value = JSON.stringify(rest, null, 2);
+    window.scrollTo(0, document.body.scrollHeight);
+  });
+  document.querySelectorAll('[data-sdel]').forEach(b => b.onclick = async () => {
+    if (!confirm('Delete source "' + b.dataset.sdel + '"? (data stays in the DB)')) return;
+    delete sources[b.dataset.sdel];
+    await saveSources();
+  });
+  document.querySelectorAll('[data-run]').forEach(b => b.onclick = async () => {
+    try {
+      const d = await api('POST', '/ingest/' + encodeURIComponent(b.dataset.run), {});
+      alert('Ingest job started: ' + d.job.id);
+      document.querySelector('[data-tab="jobs"]').click();
+    } catch (e) { alert('Failed: ' + e.message); }
+  });
+  document.querySelectorAll('[data-trivia]').forEach(b => b.onclick = async () => {
+    try {
+      const d = await api('POST', '/trivia/' + encodeURIComponent(b.dataset.trivia), { count: 100 });
+      alert('Trivia job started: ' + d.job.id);
+      document.querySelector('[data-tab="jobs"]').click();
+    } catch (e) { alert('Failed: ' + e.message); }
+  });
+}
+$('ns-clear').onclick = () => { ['ns-key','ns-name','ns-config'].forEach(id => $(id).value = ''); $('ns-llm').value = ''; };
+$('ns-save').onclick = async () => {
+  const key = $('ns-key').value.trim();
+  if (!key) { $('sources-err').textContent = 'key is required'; return; }
+  let cfg;
+  try { cfg = JSON.parse($('ns-config').value || '{}'); }
+  catch (e) { $('sources-err').textContent = 'config JSON is invalid: ' + e.message; return; }
+  sources[key] = {
+    adapter: $('ns-adapter').value,
+    display_name: $('ns-name').value.trim() || key,
+    ...cfg
+  };
+  if ($('ns-llm').value) sources[key].llm = $('ns-llm').value;
+  await saveSources();
+};
+async function saveSources() {
+  try {
+    const d = await api('PUT', '/sources', { sources });
+    sources = d.sources;
+    renderSources();
+    $('sources-ok').textContent = 'saved';
+    setTimeout(() => $('sources-ok').textContent = '', 2000);
+    $('ns-clear').onclick();
+  } catch (e) { $('sources-err').textContent = e.message; }
+}
+
+// ---- Jobs ----
+let jobTimer = null;
+async function loadJobs() {
+  try {
+    const d = await api('GET', '/jobs');
+    const jobs = d.jobs;
+    $('jobs-table').innerHTML = jobs.length ? `<table><tr><th>ID</th><th>Kind</th><th>Source</th><th>Status</th><th>Started</th><th>Finished</th><th></th></tr>` +
+      jobs.map(j => `<tr><td><code>${esc(j.id)}</code></td><td>${esc(j.kind)}</td><td>${esc(j.source)}</td>
+        <td><span class="badge ${j.status === 'done' ? 'ok' : j.status === 'error' ? 'bad' : 'warn'}">${esc(j.status)}</span></td>
+        <td>${esc(j.startedAt || '')}</td><td>${esc(j.finishedAt || '—')}</td>
+        <td><button class="ghost small" data-log="${esc(j.id)}">Log</button></td></tr>`).join('') + `</table>`
+      : '<p class="muted">No jobs yet.</p>';
+    document.querySelectorAll('[data-log]').forEach(b => b.onclick = () => showLog(b.dataset.log));
+    const running = jobs.some(j => j.status === 'running');
+    if (running && !jobTimer) jobTimer = setInterval(loadJobs, 5000);
+    if (!running && jobTimer) { clearInterval(jobTimer); jobTimer = null; }
+  } catch (e) { $('jobs-table').innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+}
+async function showLog(id) {
+  try {
+    const d = await api('GET', '/jobs/' + encodeURIComponent(id));
+    $('job-log-wrap').style.display = 'block';
+    $('job-log-title').textContent = id + ' (' + d.job.status + ')';
+    $('job-log').textContent = d.job.log || '(empty)';
+  } catch (e) { alert('Failed: ' + e.message); }
+}
+$('jobs-refresh').onclick = loadJobs;
+
+// ---- Stats ----
+async function loadStats() {
+  try {
+    const d = await api('GET', '/stats');
+    $('stats-body').innerHTML =
+      `<h4>By collection</h4><table><tr>${Object.keys(d.perModel).map(k => `<th>${esc(k)}</th>`).join('')}</tr>` +
+      `<tr>${Object.values(d.perModel).map(v => `<td>${v.toLocaleString()}</td>`).join('')}</tr></table>` +
+      `<h4>By source</h4><table><tr><th>Source</th><th>characters</th><th>items</th><th>spells</th><th>locations</th><th>trivia</th></tr>` +
+      Object.entries(d.perSource).sort().map(([k, v]) =>
+        `<tr><td><strong>${esc(k)}</strong></td><td>${v.characters || 0}</td><td>${v.items || 0}</td><td>${v.spells || 0}</td><td>${v.locations || 0}</td><td>${v.trivia || 0}</td></tr>`
+      ).join('') + `</table>`;
+  } catch (e) { $('stats-body').innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+}
+$('stats-refresh').onclick = loadStats;
+
+// ---- init ----
+loadLLM();
+loadSources();
+</script>
+</body>
+</html>

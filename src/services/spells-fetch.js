@@ -1,10 +1,9 @@
 import axios from 'axios';
 import 'dotenv/config';
-import { capText } from './extract.js';
+import { capText, llmJSON } from './extract.js';
 import connectDB from '../db.js';
 import Spell from '../models/Spell.js';
 
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const WIKI_API = process.env.WIKI_API_URL || 'https://dungeon-crawler-carl.fandom.com/api.php';
 
 const JSON_SCHEMA = {
@@ -28,23 +27,11 @@ async function extractSpellJSON(spellName, rawWikiText) {
   ${rawWikiText}`;
 
   try {
-    const response = await fetch('https://api.deepseek.com/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${DEEPSEEK_API_KEY}` },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          { role: 'system', content: `You extract unstructured text into strictly typed JSON matching this schema: ${JSON.stringify(JSON_SCHEMA)}` },
-          { role: 'user', content: prompt }
-        ],
-        response_format: { type: 'json_object' },
-        temperature: 0.1
-      })
-    });
-
-    if (!response.ok) throw new Error(`DeepSeek API Error: ${response.status}`);
-    const data = await response.json();
-    return { ...JSON.parse(data.choices[0].message.content), name: spellName };
+    const extractedData = await llmJSON([
+      { role: 'system', content: `You extract unstructured text into strictly typed JSON matching this schema: ${JSON.stringify(JSON_SCHEMA)}` },
+      { role: 'user', content: prompt }
+    ], { temperature: 0.1 });
+    return { ...extractedData, name: spellName };
   } catch (error) {
     console.error(`LLM Extraction failed for ${spellName}:`, error.message);
     return null;

@@ -24,6 +24,31 @@ npm install
 npm start
 ```
 
+## LLM providers
+
+`config/llm.json` is an ordered array of LLM providers used for structuring
+extracted text. The first enabled provider is the default; the rest are
+automatic failover. Supported types: `deepseek`, `ollama`.
+
+```json
+[
+  { "name": "deepseek", "provider": "deepseek", "model": "deepseek-chat",
+    "api_key_env": "DEEPSEEK_API_KEY", "enabled": true },
+  { "name": "valhalla-ollama", "provider": "ollama",
+    "host": "http://192.168.0.131:11434", "model": "llama3.2", "enabled": true }
+]
+```
+
+API keys stay in environment variables (`api_key_env`), never in the config.
+A source can pin a provider with `"llm": "<name>"` in `config/sources.json`.
+
+## Admin UI
+
+Open `/admin.html` in your browser. It lets you manage LLM providers
+(add/test/reorder/disable), edit site sources, launch ingest and trivia jobs
+in the background with live logs, and view database stats. Same origin API
+at `/api/v1/admin/*`.
+
 ## Ingesting a source
 
 Sources live in `config/sources.json`. Each one names a **site adapter**:

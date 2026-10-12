@@ -126,7 +126,8 @@ export async function runIngest(sourceKey, { onlyEntityType = null } = {}) {
 
             const schema = SCHEMAS[entityType] || SCHEMAS.characters;
             const data = await extractEntityJSON(
-                fetched.title, fetched.text, displayName, schema
+                fetched.title, fetched.text, displayName, schema,
+                { provider: source.llm || null }
             );
             if (!data || !data.name) continue;
 

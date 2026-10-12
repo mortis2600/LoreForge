@@ -7,7 +7,7 @@
 // fetchItem() returns raw wikitext plus the page's main image.
 
 import axios from 'axios';
-import { deepseekJSON } from '../services/extract.js';
+import { llmJSON } from '../services/extract.js';
 
 export const name = 'mediawiki';
 
@@ -55,7 +55,7 @@ async function getCategoryPages(wikiApiUrl, categoryTitle) {
 async function aiHealCategory(wikiApiUrl, entityType, originalCategory) {
     console.log(`\n🤖 AI attempting to self-heal missing category: ${originalCategory}...`);
     try {
-        const parsed = await deepseekJSON([
+        const parsed = await llmJSON([
             { role: 'user', content: `A MediaWiki site returned 0 results for "${originalCategory}". Provide exactly 5 alternative category names (starting with 'Category:') that a fan wiki might use for "${entityType}". Return ONLY a JSON object with an array of strings under the key "alternatives".` }
         ], { temperature: 0.3 });
         const alternatives = parsed.alternatives || [];

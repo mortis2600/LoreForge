@@ -1,0 +1,18 @@
+[
+  {
+    "api_key_env": "DEEPSEEK_API_KEY",
+    "enabled": true,
+    "model": "deepseek-chat",
+    "name": "deepseek",
+    "note": "Cheap, strong JSON extraction. Key lives in the environment, never in this file.",
+    "provider": "deepseek"
+  },
+  {
+    "enabled": true,
+    "host": "http://192.168.0.131:11434",
+    "model": "llama3.2",
+    "name": "valhalla-ollama",
+    "note": "Local Ollama on Valhalla (ct 111). Free, private, weaker than DeepSeek on big schemas.",
+    "provider": "ollama"
+  }
+]

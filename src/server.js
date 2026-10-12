@@ -7,6 +7,7 @@ import express from 'express';
 import cors from 'cors';
 import connectDB from './db.js';
 import apiRoutes from './routes/api.js';
+import adminRoutes from './routes/admin.js';
 import { requireApiKey } from './middleware/auth.js';
 
 const app = express();
@@ -24,6 +25,10 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok', service: 'loreforge', timestamp: new Date().toISOString() });
 });
 
+// Admin routes must mount BEFORE the generic apiRoutes: apiRoutes has
+// parameterized paths (/:fandom/:entityType) that would otherwise swallow
+// /admin/* requests.
+app.use('/api/v1/admin', requireApiKey, adminRoutes);
 app.use('/api/v1', requireApiKey, apiRoutes);
 
 app.use((req, res) => res.status(404).json({ error: 'Not found' }));

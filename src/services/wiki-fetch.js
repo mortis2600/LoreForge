@@ -1,10 +1,9 @@
 import axios from 'axios';
 import 'dotenv/config';
-import { capText } from './extract.js';
+import { capText, llmJSON, loadProviders } from './extract.js';
 import connectDB from '../db.js';
 import Character from '../models/Character.js';
 
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const WIKI_API = process.env.WIKI_API_URL || 'https://dungeon-crawler-carl.fandom.com/api.php';
 
 const JSON_SCHEMA = {
@@ -34,34 +33,14 @@ async function extractCharacterJSON(characterName, rawWikiText) {
     ${rawWikiText}`;
 
     try {
-        const response = await fetch('https://api.deepseek.com/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
-            },
-            body: JSON.stringify({
-                model: 'deepseek-chat',
-                messages: [
-                    { role: 'system', content: `You are an API that extracts unstructured text into strictly typed JSON matching this schema: ${JSON.stringify(JSON_SCHEMA)}` },
-                    { role: 'user', content: prompt }
-                ],
-                response_format: { type: 'json_object' },
-                temperature: 0.1
-            })
-        });
+        const extractedData = await llmJSON([
+            { role: 'system', content: `You are an API that extracts unstructured text into strictly typed JSON matching this schema: ${JSON.stringify(JSON_SCHEMA)}` },
+            { role: 'user', content: prompt }
+        ], { temperature: 0.1 });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`DeepSeek API Error: ${response.status} ${errorText}`);
-        }
-
-        const data = await response.json();
-        const extractedData = JSON.parse(data.choices[0].message.content);
-        
         return {
             ...extractedData,
-            name: characterName  
+            name: characterName
         };
     } catch (error) {
         console.error(`LLM Extraction failed for ${characterName}:`, error.message);
@@ -70,8 +49,8 @@ async function extractCharacterJSON(characterName, rawWikiText) {
 }
 
 async function runPipeline() {
-    if (!DEEPSEEK_API_KEY) {
-        console.error('FATAL: DEEPSEEK_API_KEY is missing from .env');
+    if (!loadProviders().length) {
+        console.error('FATAL: no LLM providers configured in config/llm.json');
         process.exit(1);
     }
 

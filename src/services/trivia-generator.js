@@ -2,8 +2,7 @@ import 'dotenv/config';
 import connectDB from '../db.js';
 import Character from '../models/Character.js';
 import Trivia from '../models/Trivia.js';
-
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+import { llmJSON } from './extract.js';
 
 const TRIVIA_SCHEMA = {
     type: "object",
@@ -35,30 +34,11 @@ Ensure each question has 4 unique options and accurately identifies the correct 
 LORE CONTEXT:
 ${context}`;
 
-    const response = await fetch('https://api.deepseek.com/chat/completions', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
-        },
-        body: JSON.stringify({
-            model: 'deepseek-chat',
-            messages: [
-                { role: 'system', content: `You extract trivia into JSON matching this schema: ${JSON.stringify(TRIVIA_SCHEMA)}` },
-                { role: 'user', content: prompt }
-            ],
-            response_format: { type: 'json_object' },
-            temperature: 0.7
-        })
-    });
-
-    if (!response.ok) {
-        throw new Error(`DeepSeek error: ${response.status} ${await response.text()}`);
-    }
-
-    const data = await response.json();
-    const parsed = JSON.parse(data.choices[0].message.content);
-    return parsed.questions || [];
+    const response = await llmJSON([
+        { role: 'system', content: `You extract trivia into JSON matching this schema: ${JSON.stringify(TRIVIA_SCHEMA)}` },
+        { role: 'user', content: prompt }
+    ], { temperature: 0.7 });
+    return response.questions || [];
 }
 
 export async function generateTriviaBatch(fandomKey, targetCount = 100) {
