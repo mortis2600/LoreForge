@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LoreForge — local lore API</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 720px; margin: 4rem auto; padding: 0 1rem; color: #e8e8e8; background: #14100d; }
+  h1 { color: #c1121f; }
+  a { color: #e8a33d; }
+  code { background: #2a2320; padding: 0.15em 0.4em; border-radius: 4px; }
+  .card { border: 1px solid #3a2f2a; border-radius: 8px; padding: 1rem 1.25rem; margin: 1rem 0; background: #1c1714; }
+</style>
+</head>
+<body>
+  <h1>🔥 LoreForge</h1>
+  <p>Your local wiki-to-JSON API service. Ingest wikis and websites, get structured lore back.</p>
+
+  <div class="card">
+    <strong>Try it:</strong>
+    <ul>
+      <li><a href="/api/v1/meta/sources">/api/v1/meta/sources</a> — what's in the database</li>
+      <li><a href="/search.html">Search explorer</a> — query the lore</li>
+      <li><code>GET /api/v1/:source/:entityType/:name</code> — look up one entity</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <strong>Ingest a new source:</strong><br>
+    <code>node src/factory.js my_source</code><br>
+    Sources live in <code>config/sources.json</code>. See the README for the adapter docs.
+  </div>
+
+  <p><small>Open source (MIT). Runs entirely on your own hardware.</small></p>
+</body>
+</html>

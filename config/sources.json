@@ -1,0 +1,109 @@
+{
+  "discworld": {
+    "adapter": "mediawiki",
+    "display_name": "Discworld",
+    "wiki_api_url": "https://discworld.fandom.com/api.php",
+    "categories": {
+      "characters": "Category:Characters",
+      "items": "Category:Artifacts_and_items"
+    }
+  },
+  "dungeon_crawler_carl": {
+    "adapter": "mediawiki",
+    "display_name": "Dungeon Crawler Carl",
+    "wiki_api_url": "https://dungeon-crawler-carl.fandom.com/api.php",
+    "categories": {
+      "characters": "Category:Characters"
+    }
+  },
+  "acotar": {
+    "adapter": "mediawiki",
+    "display_name": "A Court of Thorns and Roses",
+    "wiki_api_url": "https://acourtofthornsandroses.fandom.com/api.php",
+    "categories": {
+      "characters": "Category:Characters",
+      "items": "Category:Objects"
+    }
+  },
+  "exfor": {
+    "adapter": "mediawiki",
+    "display_name": "Expeditionary Force",
+    "wiki_api_url": "https://expeditionary-force-by-craig-alanson.fandom.com/api.php",
+    "categories": {
+      "characters": "Category:Characters",
+      "species": "Category:Species"
+    }
+  },
+  "bobiverse": {
+    "adapter": "mediawiki",
+    "display_name": "Bobiverse",
+    "wiki_api_url": "https://bobiverse.fandom.com/api.php",
+    "categories": {
+      "characters": "Category:Characters",
+      "technology": "Category:Technology"
+    }
+  },
+  "dresden": {
+    "adapter": "mediawiki",
+    "display_name": "Dresden Files",
+    "wiki_api_url": "https://dresdenfiles.fandom.com/api.php",
+    "categories": {
+      "characters": "Category:Characters",
+      "items": "Category:Items"
+    }
+  },
+  "wot": {
+    "adapter": "mediawiki",
+    "display_name": "Wheel of Time",
+    "wiki_api_url": "https://wot.fandom.com/api.php",
+    "categories": {
+      "characters": "Category:People"
+    }
+  },
+  "dune": {
+    "adapter": "mediawiki",
+    "display_name": "Dune",
+    "wiki_api_url": "https://dune.fandom.com/api.php",
+    "categories": {
+      "characters": "Category:Characters"
+    }
+  },
+  "witcher": {
+    "adapter": "mediawiki",
+    "display_name": "The Witcher",
+    "wiki_api_url": "https://witcher.fandom.com/api.php",
+    "categories": {
+      "characters": "Category:The_Witcher_3_characters",
+      "items": "Category:Weapons"
+    }
+  },
+  "fallout": {
+    "adapter": "mediawiki",
+    "display_name": "Fallout",
+    "wiki_api_url": "https://fallout.fandom.com/api.php",
+    "categories": {
+      "characters": "Category:Characters",
+      "items": "Category:Weapons"
+    }
+  },
+  "cyberpunk": {
+    "adapter": "mediawiki",
+    "display_name": "Cyberpunk 2077",
+    "wiki_api_url": "https://cyberpunk.fandom.com/api.php",
+    "categories": {
+      "characters": "Category:Cyberpunk_2077_Characters",
+      "items": "Category:Cyberware"
+    }
+  },
+  "bg3": {
+    "adapter": "mediawiki",
+    "display_name": "Baldur's Gate 3",
+    "wiki_api_url": "https://bg3.wiki/w/api.php",
+    "categories": {
+      "characters": "Category:Characters",
+      "items": "Category:Equipment",
+      "spells": "Category:Spells",
+      "locations": "Category:Locations"
+    }
+  }
+}

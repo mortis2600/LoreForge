@@ -1,0 +1,8 @@
+node_modules
+.env
+logs
+backups
+exports
+.git
+.gitignore
+npm-debug.log

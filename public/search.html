@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Explorer - Multi-Fandom API</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#0f172a',
+                        cardbg: '#1e293b',
+                        accent: '#38bdf8'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-darkbg text-slate-100 min-h-screen font-sans antialiased flex flex-col justify-between">
+    <!-- Navbar -->
+    <nav class="max-w-6xl mx-auto w-full px-6 py-6 flex justify-between items-center border-b border-slate-800/60">
+        <a href="/" class="text-xl font-extrabold tracking-tight text-accent flex items-center gap-2">
+            <span>⚡</span> FandomAPI
+        </a>
+        <div class="space-x-4 text-sm font-medium">
+            <a href="/search.html" class="text-accent font-bold">Search Explorer</a>
+            <a href="/login.html" class="text-slate-300 hover:text-accent transition">Developer Portal</a>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="max-w-4xl mx-auto px-4 py-10 w-full flex-grow">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold tracking-tight text-accent mb-2">⚡ Global Lore Search Engine</h1>
+            <p class="text-slate-400 text-sm">Query structured universe data with dynamic filters.</p>
+        </div>
+
+        <!-- Search Controls Card -->
+        <div class="bg-cardbg p-6 rounded-2xl shadow-xl border border-slate-800 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">API Key</label>
+                    <input type="text" id="apiKey" placeholder="fandom_..." 
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-accent">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Search Query</label>
+                    <input type="text" id="searchQuery" placeholder="e.g. Carl, Lilith, Sword..." 
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-accent">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Fandom Universe</label>
+                    <select id="fandomSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-accent">
+                        <option value="">All Fandoms</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Entity Type</label>
+                    <select id="entityType" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-accent">
+                        <option value="">All Types</option>
+                        <option value="characters">Characters</option>
+                        <option value="items">Items</option>
+                        <option value="spells">Spells</option>
+                        <option value="locations">Locations</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="executeSearch()" 
+                        class="w-full bg-accent hover:bg-sky-400 text-slate-950 font-bold py-2 px-4 rounded-lg text-sm transition shadow-lg">
+                        Search Lore
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsContainer" class="space-y-4">
+            <div class="text-center py-12 text-slate-500 text-sm">Enter an API key and search query above to inspect universe data.</div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="max-w-6xl mx-auto w-full px-6 py-6 border-t border-slate-800/60 text-center text-xs text-slate-500">
+        &copy; 2026 Multi-Fandom API Platform.
+    </footer>
+
+    <script>
+        document.getElementById('apiKey').value = localStorage.getItem('fandom_api_key') || '';
+
+        // Automatically fetch and populate available fandoms into the dropdown
+        async function loadFandoms() {
+            try {
+                const res = await fetch('/api/v1/meta/fandoms');
+                const data = await res.json();
+                const select = document.getElementById('fandomSelect');
+                
+                if (data.fandoms) {
+                    data.fandoms.forEach(fandom => {
+                        const option = document.createElement('option');
+                        option.value = fandom;
+                        // Format name nicely (e.g. dungeon_crawler_carl -> Dungeon Crawler Carl)
+                        option.textContent = fandom.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                        select.appendChild(option);
+                    });
+                }
+            } catch (err) {
+                console.error('Failed to load fandom metadata dropdown:', err);
+            }
+        }
+
+        loadFandoms();
+
+        async function executeSearch() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const query = document.getElementById('searchQuery').value.trim();
+            const fandom = document.getElementById('fandomSelect').value;
+            const entityType = document.getElementById('entityType').value;
+            const container = document.getElementById('resultsContainer');
+
+            if (!apiKey) {
+                alert('Please enter your API key.');
+                return;
+            }
+            if (!query) {
+                alert('Please enter a search term.');
+                return;
+            }
+
+            localStorage.setItem('fandom_api_key', apiKey);
+            container.innerHTML = '<div class="text-center py-12 text-slate-400">Searching across universes...</div>';
+
+            let url = `/api/v1/search?q=${encodeURIComponent(query)}`;
+            if (fandom) url += `&fandom=${encodeURIComponent(fandom)}`;
+            if (entityType) url += `&entityType=${encodeURIComponent(entityType)}`;
+
+            try {
+                const res = await fetch(url, {
+                    headers: { 'x-api-key': apiKey }
+                });
+                
+                const data = await res.json();
+
+                if (!res.ok) {
+                    container.innerHTML = `<div class="bg-red-950/50 border border-red-800 p-4 rounded-xl text-red-300 text-center">Error: ${data.error || 'Request failed'}</div>`;
+                    return;
+                }
+
+                if (data.results.length === 0) {
+                    container.innerHTML = `<div class="bg-cardbg border border-slate-800 p-8 rounded-xl text-center text-slate-400">No lore found matching "${query}".</div>`;
+                    return;
+                }
+
+                container.innerHTML = data.results.map(item => `
+                    <div class="bg-cardbg border border-slate-800 p-5 rounded-xl shadow-md hover:border-slate-700 transition flex gap-4 items-start">
+                        ${item.image_url ? `
+                            <img src="${item.image_url}" alt="${item.name}" class="w-20 h-20 object-cover rounded-lg border border-slate-700 flex-shrink-0 bg-slate-900 shadow-inner">
+                        ` : ''}
+                        <div class="flex-grow">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-lg font-bold text-slate-100">${item.name}</h3>
+                                <div class="space-x-2">
+                                    <span class="bg-sky-950 text-accent text-xs font-semibold px-2.5 py-1 rounded border border-sky-800">${item.fandom}</span>
+                                    <span class="bg-slate-800 text-slate-300 text-xs font-semibold px-2.5 py-1 rounded">${item.type}</span>
+                                </div>
+                            </div>
+                            <p class="text-slate-300 text-sm leading-relaxed">${item.description || 'No description available.'}</p>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = `<div class="bg-red-950/50 border border-red-800 p-4 rounded-xl text-red-300 text-center">Network error connecting to API gateway.</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
