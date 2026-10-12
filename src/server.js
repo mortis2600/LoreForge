@@ -13,6 +13,21 @@ import { requireApiKey, requireAdminKey } from './middleware/auth.js';
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
 
+// Hardening for public exposure:
+// - no X-Powered-By fingerprinting
+// - 'simple' query parser: ?fandom[$ne]=x stays a literal key, so Mongo
+//   operator injection via qs-style nesting is impossible
+app.disable('x-powered-by');
+app.set('query parser', 'simple');
+
+// Minimal security headers (no extra dependency)
+app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    next();
+});
+
 if (!process.env.MONGO_URI) {
     process.env.MONGO_URI = 'mongodb://127.0.0.1:27017/loreforge';
 }

@@ -6,10 +6,19 @@
 // No Redis, no database lookups: this middleware never blocks server boot.
 
 import 'dotenv/config';
+import crypto from 'crypto';
 
 const API_KEY = process.env.API_KEY || '';
 const WINDOW_MS = 60 * 1000;
 const MAX_REQUESTS = Number(process.env.RATE_LIMIT_PER_MINUTE || 100);
+
+// Constant-time comparison so key checks don't leak via timing.
+function safeEqual(a, b) {
+    const ba = Buffer.from(String(a));
+    const bb = Buffer.from(String(b));
+    if (ba.length !== bb.length) return false;
+    return crypto.timingSafeEqual(ba, bb);
+}
 
 // key -> { count, resetAt }
 const buckets = new Map();
@@ -36,7 +45,7 @@ function checkRateLimit(bucketKey, res) {
 export function requireApiKey(req, res, next) {
     if (API_KEY) {
         const provided = req.headers['x-api-key'];
-        if (!provided || provided !== API_KEY) {
+        if (!provided || !safeEqual(provided, API_KEY)) {
             return res.status(401).json({ error: 'Missing or invalid x-api-key header.' });
         }
         if (!checkRateLimit(`key:${provided}`, res)) return;
@@ -56,7 +65,7 @@ export function requireAdminKey(req, res, next) {
     const adminKey = process.env.ADMIN_KEY || '';
     if (adminKey) {
         const provided = req.headers['x-api-key'];
-        if (!provided || provided !== adminKey) {
+        if (!provided || !safeEqual(provided, adminKey)) {
             return res.status(401).json({ error: 'Admin access requires a valid x-api-key header.' });
         }
     }

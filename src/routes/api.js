@@ -39,7 +39,13 @@ router.get('/meta/fandoms', (req, res) => {
 
 // Global search across all entity types
 router.get('/search', async (req, res) => {
-    const { q, fandom, entityType, limit = 20 } = req.query;
+    // Coerce: with the 'simple' query parser these are always strings, but
+    // belt-and-braces in case the parser setting ever changes (qs nesting
+    // would otherwise allow Mongo operator injection via ?fandom[$ne]=x).
+    const q = typeof req.query.q === 'string' ? req.query.q : '';
+    const fandom = typeof req.query.fandom === 'string' ? req.query.fandom : undefined;
+    const entityType = typeof req.query.entityType === 'string' ? req.query.entityType : undefined;
+    const limit = req.query.limit;
 
     if (!q || q.trim() === '') {
         return res.status(400).json({ error: 'Search query parameter "q" is required.' });
@@ -97,7 +103,8 @@ router.get('/:fandom/trivia/random', async (req, res) => {
         }
         res.json({ ...question, options });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('Trivia error:', err);
+        res.status(500).json({ error: 'Failed to fetch trivia.' });
     }
 });
 
