@@ -57,7 +57,10 @@ router.get('/search', async (req, res) => {
     if (fandom) queryFilter.fandom = fandom;
 
     try {
-        const maxLimit = Math.min(Number(limit) || 20, 100);
+        // Demo instances cap page sizes so the public demo can't stand in
+        // for a real install. req.demo is only set for loopback (funnel)
+        // traffic when DEMO_MODE is on; DEMO_MODE=false removes all caps.
+        const maxLimit = Math.min(Number(limit) || 20, req.demo ? 20 : 100);
         let results = [];
 
         if (entityType && MODELS[entityType.toLowerCase()]) {
@@ -111,7 +114,7 @@ router.get('/:fandom/trivia/random', async (req, res) => {
 // Paginated entity listing
 router.get('/:fandom/:entityType', async (req, res) => {
     const { fandom, entityType } = req.params;
-    const limit = Math.min(Number(req.query.limit) || 50, 200);
+    const limit = Math.min(Number(req.query.limit) || 50, req.demo ? 50 : 200);
     const page = Math.max(Number(req.query.page) || 1, 1);
 
     const TargetModel = MODELS[entityType.toLowerCase()];

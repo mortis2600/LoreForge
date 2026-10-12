@@ -58,16 +58,21 @@ export function requireApiKey(req, res, next) {
     next();
 }
 
+// Shared by requireAdminKey and the demo-mode middleware.
+export function hasValidAdminKey(req) {
+    const adminKey = process.env.ADMIN_KEY || '';
+    const provided = req.headers['x-api-key'];
+    if (!adminKey || !provided) return false;
+    return safeEqual(provided, adminKey);
+}
+
 // Admin gate: protects /api/v1/admin/* (ingest jobs cost real LLM money).
 // If ADMIN_KEY is set, requests must carry it as the x-api-key header.
 // If ADMIN_KEY is empty, the admin API is open (LAN/dev use).
 export function requireAdminKey(req, res, next) {
     const adminKey = process.env.ADMIN_KEY || '';
-    if (adminKey) {
-        const provided = req.headers['x-api-key'];
-        if (!provided || !safeEqual(provided, adminKey)) {
-            return res.status(401).json({ error: 'Admin access requires a valid x-api-key header.' });
-        }
+    if (adminKey && !hasValidAdminKey(req)) {
+        return res.status(401).json({ error: 'Admin access requires a valid x-api-key header.' });
     }
     next();
 }

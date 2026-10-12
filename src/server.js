@@ -9,6 +9,7 @@ import connectDB from './db.js';
 import apiRoutes from './routes/api.js';
 import adminRoutes from './routes/admin.js';
 import { requireApiKey, requireAdminKey } from './middleware/auth.js';
+import { demoMode } from './middleware/demo.js';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -45,7 +46,10 @@ app.get('/health', (req, res) => {
 // /admin/* requests. Admin has its own key gate (ADMIN_KEY) so the costly
 // ingest endpoints stay private even when the public API is open.
 app.use('/api/v1/admin', requireAdminKey, adminRoutes);
-app.use('/api/v1', requireApiKey, apiRoutes);
+// demoMode sits after requireApiKey so its X-RateLimit headers (the tighter
+// demo budget) are the ones the client sees. Funnel (loopback) traffic gets
+// demo restrictions; LAN traffic and admin-key holders pass through untouched.
+app.use('/api/v1', requireApiKey, demoMode, apiRoutes);
 
 app.use((req, res) => res.status(404).json({ error: 'Not found' }));
 

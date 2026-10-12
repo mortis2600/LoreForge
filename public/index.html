@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LoreForge — local lore API</title>
+<title>LoreForge — turn your wiki into a JSON API</title>
 <style>
   body { font-family: system-ui, sans-serif; max-width: 720px; margin: 4rem auto; padding: 0 1rem; color: #e8e8e8; background: #14100d; }
   h1 { color: #c1121f; }
@@ -14,7 +14,34 @@
 </head>
 <body>
   <h1>🔥 LoreForge</h1>
-  <p>Your local wiki-to-JSON API service. Ingest wikis and websites, get structured lore back.</p>
+  <p><strong>Turn your internal wiki into a JSON API.</strong></p>
+  <p>Point LoreForge at a MediaWiki, a Fandom wiki, a Confluence space, or any
+  site. It ingests the pages, an LLM structures them into clean entities, and
+  you query everything over a simple REST API. Self-hosted, open source (MIT).</p>
+
+  <div class="card" id="demo-banner" style="display:none; border-color:#e8a33d;">
+    <strong>👋 You're browsing the public demo.</strong><br>
+    This demo is rate-limited, read-only, and capped — it can't stand in for
+    your own install, and you can't add new sources here.
+    Run LoreForge on your own hardware for the full thing:<br>
+    <a href="https://github.com/mortis2600/LoreForge">github.com/mortis2600/LoreForge</a>
+  </div>
+  <script>
+  (function () {
+    var h = location.hostname;
+    var local = /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(h) || h === '[::1]';
+    if (!local) document.getElementById('demo-banner').style.display = 'block';
+  })();
+  </script>
+
+  <div class="card">
+    <strong>What it's for:</strong>
+    <ul>
+      <li>Company wikis nobody can query — expose Confluence/MediaWiki pages as JSON for bots, dashboards, and RAG pipelines</li>
+      <li>Fan wikis and lore sites — structured characters, items, and trivia over REST</li>
+      <li>Documentation sites — turn sprawling docs into an API your tools can actually use</li>
+    </ul>
+  </div>
 
   <div class="card">
     <strong>Try it:</strong>

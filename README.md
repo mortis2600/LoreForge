@@ -1,6 +1,8 @@
 # LoreForge
 
-Turn wikis and websites into structured JSON APIs. Point it at a MediaWiki site (any Fandom wiki, independent wikis, Wikipedia) or a plain website, and it ingests pages, structures them with an LLM, stores them in MongoDB, and serves them over a clean REST API. It can also generate trivia questions from the ingested lore.
+**Turn your internal wiki into a JSON API.** Point LoreForge at a MediaWiki site (any Fandom wiki, independent wikis, Wikipedia, a Confluence space via the HTML adapter) or a plain website, and it ingests pages, structures them with an LLM, stores them in MongoDB, and serves them over a clean REST API. It can also generate trivia questions from the ingested lore.
+
+Got a company wiki nobody can query? LoreForge makes it accessible: bots, dashboards, and RAG pipelines can all hit the same REST endpoints instead of scraping HTML.
 
 Local-first, open source (MIT). No accounts, no billing, no telemetry.
 
@@ -117,6 +119,8 @@ Entity types: `characters`, `items`, `spells`, `locations`.
 | `MONGO_URI` | `mongodb://127.0.0.1:27017/loreforge` | MongoDB |
 | `API_KEY` | _(empty)_ | If set, required as `x-api-key`; empty = open |
 | `ADMIN_KEY` | _(empty)_ | Gates `/api/v1/admin/*` (ingest jobs cost money). Set this before exposing publicly |
+| `DEMO_MODE` | `true` | Demo restrictions for funnel/proxied traffic: 30 req/min shared cap, reduced page sizes, read-only on existing sources. LAN traffic and `ADMIN_KEY` holders are never restricted. Set to `false` to remove all demo limits |
+| `DEMO_RATE_LIMIT_PER_MINUTE` | `30` | Shared per-minute cap applied to demo (loopback/funnel) traffic |
 | `DEEPSEEK_API_KEY` | _(empty)_ | Required for ingestion/trivia |
 | `DEEPSEEK_MODEL` | `deepseek-chat` | LLM model |
 | `MAX_TEXT_CHARS` | `12000` | Per-page text cap before LLM calls |
