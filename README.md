@@ -116,6 +116,7 @@ Entity types: `characters`, `items`, `spells`, `locations`.
 | `PORT` | `3000` | API port |
 | `MONGO_URI` | `mongodb://127.0.0.1:27017/loreforge` | MongoDB |
 | `API_KEY` | _(empty)_ | If set, required as `x-api-key`; empty = open |
+| `ADMIN_KEY` | _(empty)_ | Gates `/api/v1/admin/*` (ingest jobs cost money). Set this before exposing publicly |
 | `DEEPSEEK_API_KEY` | _(empty)_ | Required for ingestion/trivia |
 | `DEEPSEEK_MODEL` | `deepseek-chat` | LLM model |
 | `MAX_TEXT_CHARS` | `12000` | Per-page text cap before LLM calls |

@@ -49,6 +49,20 @@ export function requireApiKey(req, res, next) {
     next();
 }
 
+// Admin gate: protects /api/v1/admin/* (ingest jobs cost real LLM money).
+// If ADMIN_KEY is set, requests must carry it as the x-api-key header.
+// If ADMIN_KEY is empty, the admin API is open (LAN/dev use).
+export function requireAdminKey(req, res, next) {
+    const adminKey = process.env.ADMIN_KEY || '';
+    if (adminKey) {
+        const provided = req.headers['x-api-key'];
+        if (!provided || provided !== adminKey) {
+            return res.status(401).json({ error: 'Admin access requires a valid x-api-key header.' });
+        }
+    }
+    next();
+}
+
 // Periodic cleanup so the map can't grow forever.
 setInterval(() => {
     const now = Date.now();
