@@ -145,9 +145,11 @@ export async function runIngest(sourceKey, { onlyEntityType = null } = {}) {
     }
 }
 
-// CLI entrypoint
+// CLI entrypoint (guarded so importing this module from other scripts
+// doesn't trigger a second ingest run)
 const [sourceKey, onlyEntityType] = process.argv.slice(2);
-if (sourceKey) {
+const isMain = (process.argv[1] || '').endsWith('services/ingest.js');
+if (isMain && sourceKey) {
     runIngest(sourceKey, { onlyEntityType: onlyEntityType || null })
         .then(() => process.exit(0))
         .catch(e => { console.error('Ingest failed:', e.message); process.exit(1); });

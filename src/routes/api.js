@@ -8,6 +8,7 @@ import Item from '../models/Item.js';
 import Spell from '../models/Spell.js';
 import Location from '../models/Location.js';
 import Trivia from '../models/Trivia.js';
+import Achievement from '../models/Achievement.js';
 
 const router = express.Router();
 
@@ -108,6 +109,38 @@ router.get('/:fandom/trivia/random', async (req, res) => {
     } catch (err) {
         console.error('Trivia error:', err);
         res.status(500).json({ error: 'Failed to fetch trivia.' });
+    }
+});
+
+// Achievements (book- and wiki-sourced). Defined before the generic
+// /:fandom/:entityType routes so they aren't swallowed by them.
+router.get('/achievements', async (req, res) => {
+    const limit = Math.min(Number(req.query.limit) || 50, req.demo ? 50 : 200);
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const filter = {};
+    if (req.query.source) filter.source = req.query.source;
+    if (req.query.book) filter.book = Number(req.query.book);
+    try {
+        const [data, total] = await Promise.all([
+            Achievement.find(filter).limit(limit).skip((page - 1) * limit)
+                .select('-__v').sort({ book: 1, title: 1 }),
+            Achievement.countDocuments(filter)
+        ]);
+        res.json({ entity_type: 'achievements', total, total_returned: data.length, page, data });
+    } catch (err) {
+        res.status(500).json({ error: 'Database query failed.' });
+    }
+});
+
+router.get('/achievements/:title', async (req, res) => {
+    try {
+        const doc = await Achievement.findOne({
+            title: new RegExp('^' + escapeRegExp(req.params.title) + '$', 'i')
+        }).select('-__v');
+        if (!doc) return res.status(404).json({ error: 'Achievement not found' });
+        res.json(doc);
+    } catch (err) {
+        res.status(500).json({ error: 'Database query failed.' });
     }
 });
 

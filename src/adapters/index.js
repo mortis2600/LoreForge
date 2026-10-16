@@ -10,10 +10,12 @@
 
 import * as mediawiki from './mediawiki.js';
 import * as html from './html.js';
+import * as epub from './epub.js';
 
 const registry = {
     [mediawiki.name]: mediawiki,
-    [html.name]: html
+    [html.name]: html,
+    [epub.name]: epub
 };
 
 export function getAdapter(adapterName) {
