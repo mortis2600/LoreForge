@@ -108,6 +108,14 @@ Base URL: `/api/v1`. If `API_KEY` is set, send it as the `x-api-key` header.
 | GET | `/api/v1/:source/trivia/random` | Random trivia question, options shuffled |
 | GET | `/api/v1/:source/:entityType?limit=50&page=1` | Paginated listing |
 | GET | `/api/v1/:source/:entityType/:name` | Exact name lookup, case-insensitive |
+| GET | `/api/v1/kinktionary/search?q=rope&category=Roles` | Dictionary search (`category`, `limit` optional) |
+| GET | `/api/v1/kinktionary/categories` | All 24 term categories |
+| GET | `/api/v1/kinktionary/random?category=Roles` | Random term, optionally by category |
+| GET | `/api/v1/kinktionary/term/Aftercare` | Exact term lookup, case-insensitive |
+| GET | `/api/v1/kinktionary/search?q=rope&category=Roles` | Dictionary search (`category`, `limit` optional) |
+| GET | `/api/v1/kinktionary/categories` | All 24 term categories |
+| GET | `/api/v1/kinktionary/random?category=Roles` | Random term, optionally by category |
+| GET | `/api/v1/kinktionary/term/Aftercare` | Exact term lookup, case-insensitive |
 
 Entity types: `characters`, `items`, `spells`, `locations`.
 
