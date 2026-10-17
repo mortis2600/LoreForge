@@ -7,6 +7,8 @@ const locationSchema = new mongoose.Schema({
     type: { type: String }, // e.g., City, Dungeon, Planet
     description: { type: String },
     image_url: { type: String, default: null },
+    source: { type: String, default: "wiki" },
+    book: { type: Number },
     last_updated: { type: Date, default: Date.now }
 });
 

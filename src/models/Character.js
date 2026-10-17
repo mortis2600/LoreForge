@@ -14,6 +14,8 @@ const characterSchema = new mongoose.Schema({
     status: { type: String, default: 'Unknown' },
     description: { type: String },
     image_url: { type: String, default: null },
+    source: { type: String, default: "wiki" },
+    book: { type: Number },
     last_updated: { type: Date, default: Date.now }
 });
 

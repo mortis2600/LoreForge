@@ -9,7 +9,6 @@ import Spell from '../models/Spell.js';
 import Location from '../models/Location.js';
 import Trivia from '../models/Trivia.js';
 import Achievement from '../models/Achievement.js';
-import KinkTerm from '../models/KinkTerm.js';
 
 const router = express.Router();
 
@@ -146,69 +145,6 @@ router.get('/achievements/:title', async (req, res) => {
 });
 
 // Paginated entity listing
-// Kinktionary dictionary routes (static dataset: 1,968 terms, 24 categories).
-// Insert BEFORE the generic /:fandom/:entityType routes so they aren't swallowed.
-
-router.get('/kinktionary/categories', async (req, res) => {
-    try {
-        const categories = await KinkTerm.distinct('category');
-        res.json({ total: categories.length, categories: categories.sort() });
-    } catch (err) {
-        console.error('Kinktionary categories error:', err);
-        res.status(500).json({ error: 'Failed to fetch categories.' });
-    }
-});
-
-router.get('/kinktionary/random', async (req, res) => {
-    try {
-        const match = {};
-        if (typeof req.query.category === 'string' && req.query.category.trim() !== '') {
-            match.category = req.query.category.trim();
-        }
-        const [doc] = await KinkTerm.aggregate([
-            { $match: match },
-            { $sample: { size: 1 } },
-            { $project: { __v: 0 } }
-        ]);
-        if (!doc) return res.status(404).json({ error: 'No terms found.' });
-        res.json(doc);
-    } catch (err) {
-        console.error('Kinktionary random error:', err);
-        res.status(500).json({ error: 'Failed to fetch random term.' });
-    }
-});
-
-router.get('/kinktionary/search', async (req, res) => {
-    const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
-    if (!q) {
-        return res.status(400).json({ error: 'Search query parameter "q" is required.' });
-    }
-    const limit = Math.min(Number(req.query.limit) || 20, req.demo ? 20 : 100);
-    const filter = { term: { $regex: escapeRegExp(q), $options: 'i' } };
-    if (typeof req.query.category === 'string' && req.query.category.trim() !== '') {
-        filter.category = req.query.category.trim();
-    }
-    try {
-        const data = await KinkTerm.find(filter).limit(limit).select('-__v').sort({ term: 1 });
-        res.json({ query: q, total_returned: data.length, results: data });
-    } catch (err) {
-        console.error('Kinktionary search error:', err);
-        res.status(500).json({ error: 'Search execution failed.' });
-    }
-});
-
-router.get('/kinktionary/term/:term', async (req, res) => {
-    try {
-        const doc = await KinkTerm.findOne({
-            term: { $regex: `^${escapeRegExp(req.params.term)}$`, $options: 'i' }
-        }).select('-__v');
-        if (!doc) return res.status(404).json({ error: 'Term not found.' });
-        res.json(doc);
-    } catch (err) {
-        console.error('Kinktionary term error:', err);
-        res.status(500).json({ error: 'Database query failed.' });
-    }
-});
 router.get('/:fandom/:entityType', async (req, res) => {
     const { fandom, entityType } = req.params;
     const limit = Math.min(Number(req.query.limit) || 50, req.demo ? 50 : 200);

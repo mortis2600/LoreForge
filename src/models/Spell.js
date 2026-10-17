@@ -10,6 +10,8 @@ const spellSchema = new mongoose.Schema({
     duration: { type: String },
     description: { type: String },
     image_url: { type: String, default: null },
+    source: { type: String, default: "wiki" },
+    book: { type: Number },
     last_updated: { type: Date, default: Date.now }
 });
 
